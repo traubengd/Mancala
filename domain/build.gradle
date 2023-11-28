@@ -1,0 +1,63 @@
+plugins {
+    // Tell Gradle that we are builing java as a library (non-executable piece of code intended for use by other applications).
+    id 'java'
+    id 'java-library'
+    id 'jacoco'
+    id 'org.barfuin.gradle.jacocolog' version '3.1.0'
+    id 'checkstyle'
+}
+
+repositories {
+    // Specify the repository mirror that we want to download our dependencies from. Maven Central is configured by default when creating a new Gradle project.
+    mavenCentral()
+}
+
+dependencies {
+    // Download JUnit so that we can use it in our tests.
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-params:5.8.2'
+    testRuntimeOnly "org.junit.platform:junit-platform-commons:1.8.2"
+    implementation "org.jacoco:org.jacoco.core:0.8.2"
+}
+
+test {
+    // For running our tests, use the test runner provided by JUnit.
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport // report is always generated after tests run
+}
+
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        failOnViolation = true
+        rule {
+            limit {
+                minimum = 0.6
+            }
+        }
+    }
+}
+
+checkstyle {
+    toolVersion '7.8.1'
+    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+}
+
+checkstyleMain {
+    source ='src/main/java'
+}
+checkstyleTest {
+    source ='src/test/java'
+}
+
+if (project.hasProperty('projVersion')) {
+  project.version = project.projVersion
+} else {
+  project.version = '1.0.0'
+}

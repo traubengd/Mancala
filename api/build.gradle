@@ -1,0 +1,88 @@
+plugins {
+    id 'java'
+    // This time we're building a command-line executable application.
+    id 'application'
+    id 'jacoco'
+    id 'org.barfuin.gradle.jacocolog' version '3.1.0'
+    id 'checkstyle'
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+
+    // Use the Jersey framework to make writing and testing servlets easier.
+    implementation 'org.glassfish.jersey.containers:jersey-container-servlet-core:+'
+    implementation 'org.glassfish.jersey.containers:jersey-container-jetty-http:+'
+    implementation 'org.glassfish.jersey.core:jersey-server:+'
+    implementation 'org.glassfish.jersey.inject:jersey-hk2:+'
+    implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:+'
+    // Use Jakarta (Java EE) for the servlet primitives.
+    implementation 'jakarta.servlet:jakarta.servlet-api:5.+'
+    // Use the Jetty server.
+    implementation 'org.eclipse.jetty:jetty-server:11+'
+    implementation 'org.eclipse.jetty:jetty-servlet:11+'
+    implementation 'org.eclipse.jetty:jetty-webapp:11+'
+    // We want to have some logging output if things go wrong, so use the simple console logger from SLF4J.
+    // In our simple use case, the logger gets automatically configured by simply existing.
+    implementation 'org.slf4j:slf4j-simple:+'
+    
+    // Reference the domain and persistence subprojects.
+    implementation project(':domain')
+    implementation project(':persistence')
+
+    // Use JUnit Jupiter API for testing.
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    // Also use the Mockito mocking framework to mock simple server functionality.
+    testImplementation "org.mockito:mockito-core:2.+"
+
+    // Use JUnit Jupiter Engine for testing.
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    implementation "org.jacoco:org.jacoco.core:0.8.2"
+}
+
+application {
+    // Define the main class for the application.
+    mainClassName = 'mancala.api.App'
+}
+
+test {
+    // Use junit platform for unit tests
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport // report is always generated after tests run
+}
+
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        failOnViolation = true
+        rule {
+            limit {
+                minimum = 0.6
+            }
+        }
+    }
+}
+
+checkstyle {
+    toolVersion '7.8.1'
+    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+}
+
+checkstyleMain {
+    source ='src/main/java'
+}
+checkstyleTest {
+    source ='src/test/java'
+}
+
+if (project.hasProperty('projVersion')) {
+  project.version = project.projVersion
+} else {
+  project.version = '1.0.0'
+}

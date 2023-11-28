@@ -1,0 +1,61 @@
+stages:
+    - build-stage
+    - testing-stage
+    - coverage-stage
+    - checkstyle-stage
+    - uploadArtifacts-stage
+
+buildBackend-job:
+  stage: build-stage
+  image: gradle:latest
+  script:
+    - gradle clean build -PprojVersion=CI_COMMIT_BRANCH+CI_CONCURRENT_ID
+
+buildFrontend-job:
+  stage: build-stage
+  image: node:latest
+  script:
+    - cd client
+    - npm install
+    - npm run build
+    - cp -a dist/. public/
+    - cd ..
+
+test-job:
+  stage: testing-stage
+  image: gradle:latest
+  script:
+    - gradle test
+  artifacts:
+    paths: 
+      - domain/build/test-results/test/**/TEST-*.xml
+      - api/build/test-results/test/**/TEST-*.xml
+
+coverage-job:
+  stage: coverage-stage
+  image: gradle:latest
+  script:
+    - gradle jacocoTestCoverageVerification
+    - gradle jacocoLogTestCoverage
+  coverage: '/    - Instruction Coverage: ([0-9.]+)%/'
+  artifacts:
+    paths:
+      - domain/build/reports/jacoco/test/jacocoTestReport.xml
+      - api/build/reports/jacoco/test/jacocoTestReport.xml
+
+checkstyle-job:
+  stage: checkstyle-stage
+  image: gradle:latest
+  script: gradle check
+
+uploadArtifacts-job:
+  stage: uploadArtifacts-stage
+  when: on_success
+  script:
+    - echo "All previous jobs succesful, adding artifacts now!"
+  artifacts:
+    paths:
+      - domain/build/
+      - api/build/
+      - persistence/build/
+      - client/public/
