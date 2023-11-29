@@ -51,8 +51,6 @@ After that, the scripts from `package.json` can do the following:
 ```bash
 # Start the front-end server
 npm run dev
-# Check code for common mistakes and style conventions
-npm run lint
 # Create a production-worthy build of the client
 npm run build
 ```
